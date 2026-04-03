@@ -1,7 +1,8 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
-require('dotenv').config();
+
 
 // Import our OpenAI service
 const { generateAmharicLesson } = require('./services/openaiService');
@@ -81,6 +82,28 @@ app.post('/api/user/:id/progress', async (req, res) => {
   }
 });
 
+
+// Add this to your Express backend
+app.post('/api/speak', async (req, res) => {
+  try {
+    const { text } = req.body; // e.g., "ሰላም"
+
+    const mp3 = await openai.audio.speech.create({
+      model: "tts-1",
+      voice: "alloy", // 'alloy', 'echo', or 'shimmer' work well
+      input: text,
+    });
+
+    const buffer = Buffer.from(await mp3.arrayBuffer());
+    
+    // We send the raw audio buffer back to the frontend
+    res.set('Content-Type', 'audio/mpeg');
+    res.send(buffer);
+  } catch (err) {
+    console.error("TTS Error:", err);
+    res.status(500).send("Audio generation failed");
+  }
+});
 
 // Server Init
 
